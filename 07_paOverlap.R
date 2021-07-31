@@ -124,7 +124,7 @@ result <- try(parLapply(cl, ecoregions, function(h) {
           
           
           
-          write.csv(ov1, file = paste0("SDM/", h, i, speciesname, ".SDM", ".csv"))
+          write.csv(ov1, file = paste0("cache/SDM/", h, i, speciesname, ".SDM", ".csv"))
           
         }
         

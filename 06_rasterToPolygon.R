@@ -22,7 +22,7 @@ ecoregions <- c("Afrotropical", "Australian", "Madagascan", "Nearctic", "Neotrop
 wdpa_crs <- "+proj=cea +lon_0=0 +lat_ts=30 +x_0=0 +y_0=0 +datum=WGS84 +ellps=WGS84 +units=m +no_defs"
 
 # Reading the protected area distribution layer
-pa <- raster("PA_resampled.tif") 
+pa <- raster("cache/PA_resampled.tif") 
 crs(pa) <- "+proj=cea +lon_0=0 +lat_ts=30 +x_0=0 +y_0=0 +datum=WGS84 +ellps=WGS84 +units=m +no_defs"
 
 
