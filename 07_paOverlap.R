@@ -11,20 +11,20 @@ library(rgdal)
 library(tidyverse)
 library(lwgeom)
 
+# Setting projection
 wdpa_crs <- "+proj=cea +lon_0=0 +lat_ts=30 +x_0=0 +y_0=0 +datum=WGS84 +ellps=WGS84 +units=m +no_defs"
 
-pa <- st_read("WDPA_cl/WDPA.shp") 
+# Reading global protected area distribution layer [I cleaned the PA layer using ArcGIS]
+pa <- st_read("cache/WDPA_cl/WDPA.shp") 
 pa <- st_set_crs(pa, NA)
 pa <- st_set_crs(pa, wdpa_crs)
 pa <- st_set_precision(pa, 1500)
 pa <- st_make_valid(pa)
 
-
+# Name of the ecoregions [DOI: 10.1126/science.1228282]
 ecoregions <- c("Afrotropical", "Australian", "Madagascan", "Nearctic", "Neotropical",
                 "Oceania", "Oriental", "Panamanian", "SaharoArabian", "Palaearctic",
                 "SinoJapanese")
-
-ecoregions <- c("Palaearctic")
 
 n_threads <- 7
 cl <- makeCluster(n_threads, "PSOCK") # create workers
@@ -50,7 +50,7 @@ clusterExport(cl, c("pa", "wdpa_crs"))
 result <- try(parLapply(cl, ecoregions, function(h) {
   print(h)
   
-  shps <- list.files(path = "SDM_layers/",pattern = "\\.shp$", recursive = TRUE, full.names = TRUE)
+  shps <- list.files(path = "cache/SDM_layers/",pattern = "\\.shp$", recursive = TRUE, full.names = TRUE)
   shps <- shps[stringr::str_detect(shps, h)]
   
   seasons <- c("S2")
@@ -60,7 +60,7 @@ result <- try(parLapply(cl, ecoregions, function(h) {
     
     shps2 <- shps[stringr::str_detect(shps, i)]
     
-    sp <- read.csv("ModelledSpecies1.csv")
+    sp <- read.csv("cache/modelledSpecies.csv")
     species <- unique(sp$species)
     
     

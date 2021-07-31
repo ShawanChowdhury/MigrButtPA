@@ -1,4 +1,3 @@
-rm(list = ls())
 options(java.parameters = "-Xmx6g")
 
 library(sp)
@@ -7,7 +6,6 @@ library(dismo)
 library(dplyr)
 library(sf)
 library(rgeos)
-library(spocc)
 library(data.table)
 library(stringr)
 library(rgdal)
@@ -15,18 +13,15 @@ library(parallel)
 library(foreach)
 library(lwgeom)
 
-# Raster to polygon
-
+# Name of the ecoregions [DOI: 10.1126/science.1228282]
 ecoregions <- c("Afrotropical", "Australian", "Madagascan", "Nearctic", "Neotropical",
                 "Oceania", "Oriental", "Panamanian", "SaharoArabian", "Palaearctic",
                 "SinoJapanese")
 
-ecoregions <- c("Madagascan")
-
-
+# Setting projection
 wdpa_crs <- "+proj=cea +lon_0=0 +lat_ts=30 +x_0=0 +y_0=0 +datum=WGS84 +ellps=WGS84 +units=m +no_defs"
 
-
+# Reading the protected area distribution layer
 pa <- raster("PA_resampled.tif") 
 crs(pa) <- "+proj=cea +lon_0=0 +lat_ts=30 +x_0=0 +y_0=0 +datum=WGS84 +ellps=WGS84 +units=m +no_defs"
 
@@ -34,7 +29,7 @@ crs(pa) <- "+proj=cea +lon_0=0 +lat_ts=30 +x_0=0 +y_0=0 +datum=WGS84 +ellps=WGS8
 for (h in ecoregions) {
   print(h)
   
-  shps <- list.files(path = "ZoogeographicRegions/",pattern = "\\.shp$", recursive = TRUE, full.names = TRUE)
+  shps <- list.files(path = "cache/zoogeographicRegions/",pattern = "\\.shp$", recursive = TRUE, full.names = TRUE)
   shps <- shps[stringr::str_detect(shps, h)]
   
   shp <- st_read(shps)
@@ -48,13 +43,13 @@ for (h in ecoregions) {
     print(i)
     
     
-    tifs1 <- list.files(path = "SpeciesWiseRaster", pattern = "\\.tif$", recursive = TRUE, full.names = TRUE)
+    tifs1 <- list.files(path = "cache/speciesWiseRaster", pattern = "\\.tif$", recursive = TRUE, full.names = TRUE)
     tifs2 <- tifs1[stringr::str_detect(tifs1, h)]
     tifs2 <- tifs2[stringr::str_detect(tifs2, i)]
     
     rm(tifs1)
     
-    sp <- read.csv("ModelledSpecies.csv")
+    sp <- read.csv("cache/modelledSpecies.csv")
     species <- unique(sp$species)
     
     for(j in species) try({
@@ -75,12 +70,12 @@ for (h in ecoregions) {
         
         sdm.shp1 <- rasterToPolygons(sdm.hull, dissolve = TRUE)
         
-        sp.name <- gsub("SpeciesWiseRaster/", "", raster_files)
+        sp.name <- gsub("cache/SpeciesWiseRaster/", "", raster_files)
         sp.name <- gsub(j, "", sp.name)
         sp.name <- gsub("/", j, sp.name)
         sp.name <- gsub("Mapbinary.tif", "", sp.name)
         
-        writeOGR(sdm.shp1, j, sp.name, driver = "ESRI Shapefile")
+        writeOGR(sdm.shp1, file = paste0("cache/SDM_layers/", j, sp.name, driver = "ESRI Shapefile"))
         
       } 
       
@@ -94,13 +89,6 @@ for (h in ecoregions) {
 
 
 # In parallel
-wdpa_crs <- "+proj=cea +lon_0=0 +lat_ts=30 +x_0=0 +y_0=0 +datum=WGS84 +ellps=WGS84 +units=m +no_defs"
-
-
-pa <- raster("PA_resampled.tif") 
-crs(pa) <- "+proj=cea +lon_0=0 +lat_ts=30 +x_0=0 +y_0=0 +datum=WGS84 +ellps=WGS84 +units=m +no_defs"
-ecoregions <- c("Neotropical")
-
 n_threads <- 9
 cl <- makeCluster(n_threads, "PSOCK") # create workers
 clusterEvalQ(cl, { # load packages into workers
@@ -113,9 +101,6 @@ clusterEvalQ(cl, { # load packages into workers
   library(data.table)
   library(stringr)
   library(rgdal)
-  library(tidyverse)
-  library(parallel)
-  library(foreach)
 })
 
 clusterExport(cl, c("pa", "wdpa_crs"))
@@ -126,7 +111,7 @@ result <- parLapply(cl, ecoregions, function(h) {
   
   print(h)
   
-  shps <- list.files(path = "ZoogeographicRegions/",pattern = "\\.shp$", recursive = TRUE, full.names = TRUE)
+  shps <- list.files(path = "cache/zoogeographicRegions/",pattern = "\\.shp$", recursive = TRUE, full.names = TRUE)
   shps <- shps[stringr::str_detect(shps, h)]
   
   shp <- st_read(shps)
@@ -134,19 +119,19 @@ result <- parLapply(cl, ecoregions, function(h) {
   shp <- as(shp, "sf")
   shp <- st_transform(shp, crs = wdpa_crs)
   
-  seasons <- c("S4")
+  seasons <- c("S1", "S2", "S3", "S4")
   
   for(i in seasons) {
     print(i)
     
     
-    tifs1 <- list.files(path = "SpeciesWiseRaster", pattern = "\\.tif$", recursive = TRUE, full.names = TRUE)
+    tifs1 <- list.files(path = "cache/speciesWiseRaster", pattern = "\\.tif$", recursive = TRUE, full.names = TRUE)
     tifs2 <- tifs1[stringr::str_detect(tifs1, h)]
     tifs2 <- tifs2[stringr::str_detect(tifs2, i)]
     
     rm(tifs1)
     
-    sp <- read.csv("ModelledSpecies.csv")
+    sp <- read.csv("cache/modelledSpecies.csv")
     species <- unique(sp$species)
     
     for(j in species) try({
@@ -167,12 +152,12 @@ result <- parLapply(cl, ecoregions, function(h) {
         
         sdm.shp1 <- rasterToPolygons(sdm.hull, dissolve = TRUE)
         
-        sp.name <- gsub("SpeciesWiseRaster/", "", raster_files)
+        sp.name <- gsub("cache/speciesWiseRaster/", "", raster_files)
         sp.name <- gsub(j, "", sp.name)
         sp.name <- gsub("/", j, sp.name)
         sp.name <- gsub("Mapbinary.tif", "", sp.name)
         
-        writeOGR(sdm.shp1, j, sp.name, driver = "ESRI Shapefile")
+        writeOGR(sdm.shp1, file = paste0("cache/SDM_layers/", j, sp.name, driver = "ESRI Shapefile"))
         
       } 
       
