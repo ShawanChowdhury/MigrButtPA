@@ -1,3 +1,4 @@
+# Loading required libraries
 library(sp)
 library(raster)
 library(dismo)
@@ -11,21 +12,20 @@ library(rgdal)
 library(tidyverse)
 library(lwgeom)
 
-# Setting projection
 wdpa_crs <- "+proj=cea +lon_0=0 +lat_ts=30 +x_0=0 +y_0=0 +datum=WGS84 +ellps=WGS84 +units=m +no_defs"
 
-# Reading global protected area distribution layer [I cleaned the PA layer using ArcGIS]
-pa <- st_read("cache/WDPA_cl/WDPA.shp") 
+pa <- st_read("WDPA_cl/WDPA.shp") 
 pa <- st_set_crs(pa, NA)
 pa <- st_set_crs(pa, wdpa_crs)
 pa <- st_set_precision(pa, 1500)
 pa <- st_make_valid(pa)
 
-# Name of the ecoregions [DOI: 10.1126/science.1228282]
+
 ecoregions <- c("Afrotropical", "Australian", "Madagascan", "Nearctic", "Neotropical",
                 "Oceania", "Oriental", "Panamanian", "SaharoArabian", "Palaearctic",
                 "SinoJapanese")
 
+# Running in parallel
 n_threads <- 7
 cl <- makeCluster(n_threads, "PSOCK") # create workers
 clusterEvalQ(cl, { # load packages into workers
@@ -41,6 +41,8 @@ clusterEvalQ(cl, { # load packages into workers
   library(rgdal)
   library(tidyverse)
   library(lwgeom)
+  library(parallel)
+  library(foreach)
 })
 
 clusterExport(cl, c("pa", "wdpa_crs"))
@@ -50,17 +52,18 @@ clusterExport(cl, c("pa", "wdpa_crs"))
 result <- try(parLapply(cl, ecoregions, function(h) {
   print(h)
   
-  shps <- list.files(path = "cache/SDM_layers/",pattern = "\\.shp$", recursive = TRUE, full.names = TRUE)
+  shps <- list.files(path = "SDM_layers/",pattern = "\\.shp$", recursive = TRUE, full.names = TRUE)
   shps <- shps[stringr::str_detect(shps, h)]
   
-  seasons <- c("S2")
+  # I did run it separately for each season
+  seasons <- c("S1")
   
   for(i in seasons) {
     print(i)
     
     shps2 <- shps[stringr::str_detect(shps, i)]
     
-    sp <- read.csv("cache/modelledSpecies.csv")
+    sp <- read.csv("ModelledSpecies1.csv")
     species <- unique(sp$species)
     
     
@@ -124,7 +127,7 @@ result <- try(parLapply(cl, ecoregions, function(h) {
           
           
           
-          write.csv(ov1, file = paste0("cache/SDM/", h, i, speciesname, ".SDM", ".csv"))
+          write.csv(ov1, file = paste0("SDM/", h, i, speciesname, ".SDM", ".csv"))
           
         }
         
