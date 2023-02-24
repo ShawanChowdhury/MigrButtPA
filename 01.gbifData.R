@@ -21,7 +21,7 @@ gbif_taxon_keys <-
 occ_download(
   pred_in("taxonKey", gbif_taxon_keys),
   format = "SIMPLE_CSV",
-  user= "shawan_zl",pwd= "nabolakothaFB89",email= "shawan1094061@gmail.com"
+  user= "USER",pwd= "PASSWORD",email= "EMAIL"
 )
 
 # Using the regulardownload function, we can only download a maximum of 200,000/species. This way, we obtained
