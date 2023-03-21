@@ -55,7 +55,25 @@ gbif_filter <- gbif_filter %>%
 # Removing duplicated records
 gbif_filter_dedup <- gbif_filter[!duplicated(gbif_filter),]
 
-fwrite(gbif_filter_dedup, "data/cleanedRecords_gbif.csv")
+######################################
+# Seasonal grouping
+######################################
+# Grouping data by months
+s1 <- gbif_filter_dedup %>% 
+  dplyr::filter(month %in% c(2, 3, 4)) %>% 
+  mutate(season = "S1")
+s2 <- gbif_filter_dedup %>% 
+  dplyr::filter(month %in% c(5, 6, 7)) %>% 
+  mutate(season = "S2")
+s3 <- gbif_filter_dedup %>% 
+  dplyr::filter(month %in% c(8, 9, 10)) %>% 
+  mutate(season = "S3")
+s4 <- gbif_filter_dedup %>% 
+  dplyr::filter(month %in% c(11, 12, 1)) %>% 
+  mutate(season = "S4")
 
-# Cleaning memory
-rm(gbif_data1, flags)
+# Merging seasonal data
+data <- rbind(s1, s2, s3, s4)
+
+# Exporting output
+fwrite(data, "data/cleanedRecords_gbif.csv")

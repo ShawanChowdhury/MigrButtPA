@@ -5,28 +5,20 @@ library(spThin)
 library(tidyverse)
 library(dplyr)
 
-data <- read_csv("data/grouped_data_merged.csv")
+data <- read_csv("data/cleanedRecords_gbif.csv")
 head(data)
 
-region <- unique(data$region)
+season <- unique(data$season)
 
-g <- "Sino-Japanese"
-h <- "S4"
-i <- "Aporia crataegi"
+# g <- "Sino-Japanese"
+# h <- "S4"
+# i <- "Aporia crataegi"
 
-for (g in region) {
-  print(g)
-  
-  reg_data <- data %>% 
-    filter(region == g)
-  
-  season <- unique(reg_data$season)
-  
-  for (h in season) {
+for (h in season) {
     
     print(h)
     
-    ses_data <- reg_data %>% 
+    ses_data <- data %>% 
       filter(season == h)
     
     species <- unique(ses_data$species)
@@ -55,10 +47,9 @@ for (g in region) {
         dplyr::select("decimalLon", "decimalLat") %>% 
         dplyr::mutate(species = i)
       
-      write.csv(thin_data, paste0("data/thinned/", g, h, i, "_thin.csv"), row.names = FALSE)
+      write.csv(thin_data, paste0("data/thinned/", h, i, "_thin.csv"), row.names = FALSE)
     }
     
-  }
 }
 
 
