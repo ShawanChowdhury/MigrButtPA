@@ -10,9 +10,10 @@ head(data)
 
 season <- unique(data$season)
 
+# Test-run
 # g <- "Sino-Japanese"
-# h <- "S4"
-# i <- "Aporia crataegi"
+h <- "S4"
+i <- "Aporia crataegi"
 
 for (h in season) {
     
