@@ -12,8 +12,8 @@ season <- unique(data$season)
 
 # Test-run
 # g <- "Sino-Japanese"
-h <- "S4"
-i <- "Aporia crataegi"
+# h <- "S4"
+# i <- "Aporia crataegi"
 
 for (h in season) {
     
@@ -33,7 +33,7 @@ for (h in season) {
       # Spatial thinning
       thinned_dataset_full <-
         thin( loc.data = sp_data, 
-              lat.col = "decimalLat", long.col = "decimalLon", 
+              lat.col = "decimalLatitude", long.col = "decimalLongitude", 
               spec.col = "species", 
               thin.par = 4.65, reps = 10000, 
               locs.thinned.list.return = TRUE, 
@@ -42,10 +42,10 @@ for (h in season) {
       
       max_idx <- which.max(sapply(thinned_dataset_full, nrow))
       thinned_dataset_max_rows <- thinned_dataset_full [[max_idx]]
-      colnames(thinned_dataset_max_rows) <- c("decimalLon", "decimalLat")
+      colnames(thinned_dataset_max_rows) <- c("decimalLongitude", "decimalLatitude")
       
       thin_data <- thinned_dataset_max_rows %>%
-        dplyr::select("decimalLon", "decimalLat") %>% 
+        dplyr::select("decimalLongitude", "decimalLatitude") %>% 
         dplyr::mutate(species = i)
       
       write.csv(thin_data, paste0("data/thinned/", h, i, "_thin.csv"), row.names = FALSE)
