@@ -40,3 +40,5 @@ cache/
 
 # R Environment Variables
 .Renviron
+data/gbif/gbif.zip
+data/gbif/gbif1.zip
