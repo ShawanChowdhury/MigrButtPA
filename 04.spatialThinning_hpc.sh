@@ -18,4 +18,4 @@ species_csv=$(awk "NR==$SLURM_ARRAY_TASK_ID" "$input_files")
 
 mkdir -p data/thinned
 
-Rscript --vanilla /home/$USER/04.spatialThinning_hpc.R "$species_csv"
+Rscript --vanilla /home/$USER/MigratoryButterfliesPA/04.spatialThinning_hpc.R "$species_csv"
