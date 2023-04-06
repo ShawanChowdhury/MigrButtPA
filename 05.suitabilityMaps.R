@@ -2,11 +2,9 @@
 library(sp)
 library(raster)
 library(dismo)
-library(rJava)
 library(dplyr)
 library(sf)
 library(rgeos)
-library(spocc)
 library(ENMeval)
 library(data.table)
 library(stringr)
@@ -15,11 +13,10 @@ library(data.table)
 library(tidyverse)
 
 # Reading csv file
-data <- read_csv("data/cleanedRecords_gbif.csv", header = T)
+data <- fread("data/cleanedRecords_gbif.csv", header = T)
 
 data <- data %>%
   dplyr::select("species", "decimalLongitude", "decimalLatitude", "season")
-
 
 # Remove records without coordinates
 data <- data %>%
@@ -64,7 +61,7 @@ for (h in season) try({
     # or may not want to do this based on the aims of your study.
     # Another way to space occurrence records a defined distance from each other to avoid
     # spatial autocorrelation is with spatial thinning (Aiello-Lammens et al. 2015).
-    occs.cells <- raster::extract(clim.stack[[1]], occs, cellnumbers = TRUE)
+    occs.cells <- raster::extract(envs[[1]], occs, cellnumbers = TRUE)
     occs.cellDups <- duplicated(occs.cells[,1])
     occs <- occs[!occs.cellDups,]
     
