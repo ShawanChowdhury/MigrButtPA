@@ -14,6 +14,7 @@ library(tidyverse)
 
 # Reading csv file
 data <- fread("data/cleanedRecords_gbif.csv", header = T)
+# data <- fread("data/04.missing_species.csv", header = T)
 
 data <- data %>%
   dplyr::select("species", "decimalLongitude", "decimalLatitude", "season")
@@ -130,3 +131,65 @@ for (h in season) try({
     
   }
 }, silent = FALSE)
+
+
+# List of species for which the model worked
+sdm_done <- list.files(path = "output/sdm/",pattern = "\\.tif$", recursive = TRUE, full.names = TRUE)
+sdm_done <- sdm_done[stringr::str_detect(sdm_done, "Binary")]
+
+# Replacing values
+df <- data.frame()
+
+season <- c("S1", "S2", "S3", "S4")
+
+for (h in season) {
+  print(h)
+  
+  sdm_done_ses <- sdm_done[stringr::str_detect(sdm_done, h)]
+  
+  # Converting it to a df
+  sdm_done_ses <- as.data.frame(sdm_done_ses)
+  
+  for (i in 1:(NROW(sdm_done_ses))) {
+    print(i)
+    
+    row <- sdm_done_ses[i,]
+    
+    rowname <- gsub("output/sdm//", "", row)
+    rowname <- gsub("Binary_", "", rowname)
+    rowname <- gsub(".tif", "", rowname)
+    rowname <- gsub("_", " ", rowname)
+    
+    row_df <- as.data.frame(rowname)
+    
+    row_df <- row_df %>% separate(rowname, c("species", "b"), sep = "/")
+    
+    row_df <- row_df %>% 
+      mutate(season = h) %>% 
+      select(species, season)
+    
+    df <- rbind(df, row_df)
+    
+  }
+}
+
+df <- df %>% 
+  mutate(status = "completed")
+
+# Cleaning memory
+rm(row_df, sdm_done_ses, h, i, row, rowname, sdm_done, season)
+
+# List of species for which the model didn';t owrk't work
+data <- read_csv("data/cleanedRecords_gbif.csv")
+
+# Inspecting top rows
+head(data)
+
+# Merging dataframes
+data <- dplyr::left_join(data, df, by = c("species", "season"))
+
+# Filtering species for which the model didn't work
+missing_sp <- data[!complete.cases(data$status), ]
+
+# Exporting output
+write_csv(missing_sp, "data/05.missing_species.csv")
