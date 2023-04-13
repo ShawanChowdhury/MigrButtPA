@@ -14,6 +14,8 @@ library(tidyverse)
 sdm_done <- list.files(path = "output/sdm/",pattern = "\\.tif$", recursive = TRUE, full.names = TRUE)
 sdm_done <- sdm_done[stringr::str_detect(sdm_done, "Binary")]
 
+# sdm_done <- sdm_done[1:2]
+
 # Converting it to a dataframe
 sdm_done_df <- as.data.frame(sdm_done)
 
@@ -49,7 +51,6 @@ for (i in 1:(NROW(sdm_done_df))) try({
   sp_country <- exact_extract(r, world)
   
   for (j in 1:(NROW(sp_country))) {
-    print(j)
     
     int_df <- as.data.frame(sp_country[j])
     
@@ -62,14 +63,31 @@ for (i in 1:(NROW(sdm_done_df))) try({
         dplyr::mutate(country = country, species = species, season = season) %>% 
         dplyr::select(species, season, country, coverage_fraction)
       
-      df <- rbind(df, int_sum)
+      int_sum_country <- int_sum %>% 
+        group_by(species, season, country) %>% 
+        dplyr::summarise(total_area = sum(coverage_fraction))
+      
+      df <- rbind(df, int_sum_country)
       
     }
   }
   
 }, silent = FALSE)
 
-# Summarising by country
-df <- df %>% 
-  group_by(country) %>% 
-  summarise(n = sum(coverage_fraction))
+# Renaming column
+colnames(df)[4] <- "area"
+
+# Exporting output
+write_csv(df, "output/species_suitability_country_original.csv")
+
+# Calculating proportion
+df_sum <- df %>% 
+  group_by(species, season) %>% 
+  mutate(tot_area = sum(area))
+
+df_sum <- df_sum %>% 
+  group_by(species, season, country, tot_area) %>% 
+  dplyr::mutate(prop_area = ((area/tot_area)*100))
+
+# Exporting output
+write_csv(df_sum, "output/species_suitability_country_summarised.csv")
