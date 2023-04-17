@@ -47,25 +47,3 @@ head(interpolation_gap)
 
 write_csv(interpolation_gap, "output/seasonal_interpolation_gap.csv")
 
-################
-# Calculating number of gap species
-interpolation_gap <- read_csv("output/seasonal_interpolation_gap.csv")
-
-met_target <- interpolation_gap %>% 
-  filter(season == "1" | gap <= 0,
-         season == "2" | gap <= 0,
-         season == "3" | gap <= 0,
-         season == "4" | gap <= 0)
-
-species_met_target <- met_target %>% 
-  group_by(species) %>% 
-  summarise(n = NROW(season))
-
-# 236 of 426 species
-
-species_met_target_all_season <- species_met_target %>% 
-  filter(n > 3)
-
-# 62 of 426 species
-
-fwrite(species_met_target_all_season, "output/species_met_target_all_season.csv")
